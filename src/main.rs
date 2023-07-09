@@ -20,6 +20,8 @@ async fn main() {
         .route("/sources", get(api::list_sources))
         .route("/source/:source/builds/:champion", get(api::get_lastest_build))
         .route("/source/:source/runes/:champion", get(api::get_lastest_build))
+        .route("/data-dragon/champions", get(api::list_champion_map))
+        .route("/data-dragon/runes", get(api::list_runes_reforged))
         .layer(Extension(agent));
 
     let app = Router::new().nest("/api", api_routes);
