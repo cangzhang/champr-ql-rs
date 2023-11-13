@@ -1,7 +1,6 @@
 [workspace]
 members = [
-    "crates/quicklook-rs",
-    "crates/cli"
+    "crates/*"
 ]
 
 [profile.release]
