@@ -1,12 +1,7 @@
-FROM rust:1.70 as builder
-WORKDIR /usr/src/app
-COPY . .
-RUN cargo install --path . && cargo build --release
-
 FROM debian:stable
 RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/src/app/target/release/champr-quick-look /usr/local/bin/champr-quick-look
+COPY target/aarch64-unknown-linux-gnu/release/quicklook-rs /usr/local/bin/quicklook-rs
 
 EXPOSE 3030
 
-CMD ["champr-quick-look"]
+CMD ["quicklook-rs"]
