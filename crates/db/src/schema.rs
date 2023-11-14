@@ -10,3 +10,17 @@ diesel::table! {
         content -> Json,
     }
 }
+
+diesel::table! {
+    sources (id) {
+        id -> Int4,
+        name -> Varchar,
+        source -> Varchar,
+        version -> Varchar,
+    }
+}
+
+diesel::allow_tables_to_appear_in_same_query!(
+    builds,
+    sources,
+);
