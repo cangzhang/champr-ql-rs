@@ -40,9 +40,17 @@ jobs:
         env:
           GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         with:
-          name: "nightly-${{ env.GITHUB_RUN_ID }}"
+          name: "nightly_${{ env.GITHUB_RUN_ID }}"
           path: |
             target/*-unknown-linux-gnu/release/quicklook-rs
+
+      
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: cangzhang/quicklook-rs
+          tags: type=sha, suffix=night-
       
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -52,4 +60,4 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: "cangzhang/quicklook-rs:nightly-${{ env.GITHUB_SHA }}"
+          tags: ${{ steps.meta.outputs.tags }}
