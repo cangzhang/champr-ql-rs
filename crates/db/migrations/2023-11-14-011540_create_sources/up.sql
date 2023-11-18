@@ -6,4 +6,4 @@ CREATE TABLE sources (
     version VARCHAR NOT NULL
 );
 
-CREATE INDEX source_version ON sources (source, version);
+ALTER TABLE sources ADD UNIQUE (source);

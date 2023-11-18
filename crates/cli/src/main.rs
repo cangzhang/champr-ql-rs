@@ -23,7 +23,7 @@ async fn main() -> Result<(), ()> {
         Some(Commands::Sync) => {
             println!("started sync command");
 
-            match service::get_sources() {
+            match service::list_sources().await {
                 Ok(list) => {
                     let new_sources = list
                         .iter()

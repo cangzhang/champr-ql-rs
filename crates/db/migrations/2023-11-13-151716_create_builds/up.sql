@@ -7,5 +7,3 @@ CREATE TABLE builds (
   champion_id INTEGER NOT NULL,
   content json NOT NULL
 );
-
-CREATE INDEX source_champion ON builds (source, champion_alias, champion_id);

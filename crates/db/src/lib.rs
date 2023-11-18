@@ -1,10 +1,10 @@
 pub mod models;
 pub mod schema;
 
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
+use diesel::{pg::PgConnection, upsert::excluded};
 use dotenvy::dotenv;
-use models::{NewSource, Source, Build};
+use models::{Build, NewSource, Source};
 use std::env;
 
 use crate::models::NewBuild;
@@ -17,7 +17,7 @@ pub fn establish_connection() -> PgConnection {
         .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
 }
 
-pub fn create_source(conn: &mut PgConnection, name: &str, source: &str, version: &str) -> Source {
+pub fn insert_source(conn: &mut PgConnection, name: &str, source: &str, version: &str) -> Source {
     use schema::sources;
 
     let new_source = NewSource {
@@ -33,15 +33,41 @@ pub fn create_source(conn: &mut PgConnection, name: &str, source: &str, version:
 }
 
 pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usize {
-    use schema::sources;
+    use schema::sources::{table, dsl as sources_dsl};
 
-    diesel::insert_into(sources::table)
+    // diesel::insert_into(sources::table)
+    //     .values(&list)
+    //     .on_conflict(sources_dsl::source)
+    //     .do_update()
+    //     .set((
+    //         sources_dsl::name.eq(excluded(sources_dsl::name)),
+    //         sources_dsl::version.eq(excluded(sources_dsl::version)),
+    //         // sources_dsl::source.eq(excluded(sources_dsl::source)),
+    //     ))
+    //     .execute(conn)
+    //     .expect("Error upserting sources")
+
+    diesel::insert_into(table)
         .values(&list)
+        .on_conflict(sources_dsl::source)
+        .do_update()
+        .set((
+            sources_dsl::name.eq(excluded(sources_dsl::name)),
+            sources_dsl::version.eq(excluded(sources_dsl::version)),
+            // Update other fields as necessary, but typically not the conflict target
+        ))
         .execute(conn)
-        .expect("Error creating new source")
+        .expect("Error upserting sources")
 }
 
-pub fn create_build(conn: &mut PgConnection, source: &str, version: &str, champion_alias: &str, champion_id: i32, content: serde_json::Value) -> Build {
+pub fn insert_build(
+    conn: &mut PgConnection,
+    source: &str,
+    version: &str,
+    champion_alias: &str,
+    champion_id: i32,
+    content: serde_json::Value,
+) -> Build {
     use schema::builds;
 
     let new_source = NewBuild {
