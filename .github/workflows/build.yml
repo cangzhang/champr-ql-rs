@@ -16,7 +16,7 @@ jobs:
           cache-all-crates: "true"
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@master
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -35,27 +35,24 @@ jobs:
           cargo install cross --git https://github.com/cross-rs/cross
           cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
           cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
-
-      - uses: actions/upload-artifact@v3
-        env:
-          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
-        with:
-          name: "nightly_${{ env.GITHUB_RUN_ID }}"
-          path: |
-            target/*-unknown-linux-gnu/release/quicklook-rs
-
       
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: cangzhang/quicklook-rs
-          tags: type=sha, suffix=night-
+          tags: type=sha, format=short, prefix=night-
+
+      - uses: actions/upload-artifact@v3
+        env:
+          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
+        with:
+          name: nightly-${{ github.run_id	 }}
+          path: |
+            target/*-unknown-linux-gnu/release/quicklook-*
       
       - name: Build and push
         uses: docker/build-push-action@v4
-        env:
-          GITHUB_SHA: ${{ env.GITHUB_SHA }}
         with:
           context: .
           push: true
