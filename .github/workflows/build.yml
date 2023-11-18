@@ -41,7 +41,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: cangzhang/quicklook-rs
-          tags: type=sha, format=short, prefix=night-
+          tags: type=sha, format=short, prefix=nightly-
 
       - uses: actions/upload-artifact@v3
         env:
