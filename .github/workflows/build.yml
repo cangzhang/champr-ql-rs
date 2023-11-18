@@ -23,8 +23,12 @@ jobs:
           cargo install cross --git https://github.com/cross-rs/cross
           cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
           cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
-          tree -L 1 ./target/aarch64-unknown-linux-gnu/release
-          tree -L 1 ./target/x86_64-unknown-linux-gnu/release
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: nightly-${{ env.GITHUB_RUN_ID }}
+          path: |
+            target/*-unknown-linux-gnu/release/quicklook-rs
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -37,6 +41,17 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: nightly-${{ env.GITHUB_RUN_ID }}
+          path: .
+
+      - name: Unzip Artifacts
+        run: |
+          ls -R
+          unzip your-artifact-name.zip -d ./target
       
       - name: Build and push
         uses: docker/build-push-action@v4
