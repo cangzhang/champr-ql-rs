@@ -35,18 +35,6 @@ pub fn insert_source(conn: &mut PgConnection, name: &str, source: &str, version:
 pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usize {
     use schema::sources::{table, dsl as sources_dsl};
 
-    // diesel::insert_into(sources::table)
-    //     .values(&list)
-    //     .on_conflict(sources_dsl::source)
-    //     .do_update()
-    //     .set((
-    //         sources_dsl::name.eq(excluded(sources_dsl::name)),
-    //         sources_dsl::version.eq(excluded(sources_dsl::version)),
-    //         // sources_dsl::source.eq(excluded(sources_dsl::source)),
-    //     ))
-    //     .execute(conn)
-    //     .expect("Error upserting sources")
-
     diesel::insert_into(table)
         .values(&list)
         .on_conflict(sources_dsl::source)
@@ -54,7 +42,6 @@ pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usi
         .set((
             sources_dsl::name.eq(excluded(sources_dsl::name)),
             sources_dsl::version.eq(excluded(sources_dsl::version)),
-            // Update other fields as necessary, but typically not the conflict target
         ))
         .execute(conn)
         .expect("Error upserting sources")
