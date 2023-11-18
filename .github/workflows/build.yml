@@ -37,6 +37,8 @@ jobs:
           cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
 
       - uses: actions/upload-artifact@v3
+        env:
+          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         with:
           name: "nightly-$GITHUB_RUN_ID"
           path: |
@@ -44,6 +46,8 @@ jobs:
       
       - name: Build and push
         uses: docker/build-push-action@v4
+        env:
+          GITHUB_SHA: ${{ env.GITHUB_SHA }}
         with:
           context: .
           push: true
