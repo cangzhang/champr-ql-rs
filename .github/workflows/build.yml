@@ -23,7 +23,8 @@ jobs:
           cargo install cross --git https://github.com/cross-rs/cross
           cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
           cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
-          tree -L 1 ./target
+          tree -L 1 ./target/aarch64-unknown-linux-gnu/release
+          tree -L 1 ./target/x86_64-unknown-linux-gnu/release
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
