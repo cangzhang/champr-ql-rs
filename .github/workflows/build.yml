@@ -18,18 +18,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cross Compile
-        run: |
-          cargo install cross --git https://github.com/cross-rs/cross
-          cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
-          cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: nightly-${{ env.GITHUB_RUN_ID }}
-          path: |
-            target/*-unknown-linux-gnu/release/quicklook-rs
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       
@@ -42,16 +30,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Download Artifacts
-        uses: actions/download-artifact@v3
+      - name: Cross Compile
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
+          cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
+
+      - uses: actions/upload-artifact@v3
         with:
           name: nightly-${{ env.GITHUB_RUN_ID }}
-          path: .
-
-      - name: Unzip Artifacts
-        run: |
-          ls -R
-          unzip your-artifact-name.zip -d ./target
+          path: |
+            target/*-unknown-linux-gnu/release/quicklook-rs
       
       - name: Build and push
         uses: docker/build-push-action@v4
@@ -59,3 +48,4 @@ jobs:
           push: true
           tags: cangzhang/quicklook-rs:latest
           platforms: linux/amd64,linux/arm64
+          context: .
