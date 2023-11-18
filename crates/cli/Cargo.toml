@@ -10,3 +10,5 @@ clap = { version = "4.4.8", features = ["derive"] }
 tokio = { version = "1.34.0", features = ["full"] }
 service = { path = "../service" }
 db = { path = "../db" }
+kv-log-macro = "1.0.7"
+femme = "2.2.1"

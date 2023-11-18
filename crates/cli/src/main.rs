@@ -1,8 +1,10 @@
 use clap::{Parser, Subcommand};
+use kv_log_macro as log;
 
 #[derive(Subcommand)]
 enum Commands {
-    Sync,
+    SyncSource,
+    SyncBuild,
 }
 
 #[derive(Parser)]
@@ -15,13 +17,16 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> Result<(), ()> {
-    let cli = Cli::parse();
+    use log::*;
 
+    femme::with_level(femme::LevelFilter::Trace);
+
+    let cli = Cli::parse();
     let mut pg_conn = db::establish_connection();
 
     match &cli.command {
-        Some(Commands::Sync) => {
-            println!("started sync command");
+        Some(Commands::SyncSource) => {
+            info!("started sync sources");
 
             match service::list_sources().await {
                 Ok(list) => {
@@ -39,15 +44,27 @@ async fn main() -> Result<(), ()> {
                         })
                         .collect::<Vec<db::models::NewSource>>();
                     let total = db::insert_many_sources(&mut pg_conn, new_sources);
-                    println!("inserted: {total}");
+                    info!("inserted: {total}");
                 }
                 Err(err) => {
-                    println!("error: {}", err);
+                    error!("error: {}", err);
+                }
+            }
+        }
+        Some(Commands::SyncBuild) => {
+            info!("started sync builds");
+
+            match service::list_all_champions().await {
+                Ok(resp) => {
+                    info!("version {}, total: {}", resp.version, resp.data.len());
+                }
+                Err(e) => {
+                    error!("error: {}", e);
                 }
             }
         }
         _ => {
-            println!("nothing");
+            log::info!("nothing");
         }
     };
 

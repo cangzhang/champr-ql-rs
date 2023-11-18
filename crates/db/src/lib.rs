@@ -33,7 +33,7 @@ pub fn insert_source(conn: &mut PgConnection, name: &str, source: &str, version:
 }
 
 pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usize {
-    use schema::sources::{table, dsl as sources_dsl};
+    use schema::sources::{dsl as sources_dsl, table};
 
     diesel::insert_into(table)
         .values(&list)
