@@ -40,7 +40,7 @@ jobs:
         env:
           GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
         with:
-          name: "nightly-$GITHUB_RUN_ID"
+          name: "nightly-${{ env.GITHUB_RUN_ID }}"
           path: |
             target/*-unknown-linux-gnu/release/quicklook-rs
       
@@ -52,4 +52,4 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: "cangzhang/quicklook-rs:nightly-$GITHUB_SHA"
+          tags: "cangzhang/quicklook-rs:nightly-${{ env.GITHUB_SHA }}"
