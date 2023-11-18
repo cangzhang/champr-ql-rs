@@ -38,14 +38,14 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: nightly-${{ env.GITHUB_RUN_ID }}
+          name: "nightly-${{ env.GITHUB_RUN_ID }}"
           path: |
             target/*-unknown-linux-gnu/release/quicklook-rs
       
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
-          push: true
-          tags: cangzhang/quicklook-rs:nightly-${{ env.GITHUB_SHA }}
-          platforms: linux/amd64,linux/arm64
           context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: "cangzhang/quicklook-rs:nightly-${{ env.GITHUB_SHA }}"
