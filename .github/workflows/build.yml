@@ -29,13 +29,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Cross Compile
-        run: |
-          # mkdir .cargo && cp docker/cargo-config .cargo/config
-          cargo install cross --git https://github.com/cross-rs/cross
-          cross build --release -p quicklook-rs -p cli --target x86_64-unknown-linux-gnu
-          cross build --release -p quicklook-rs -p cli --target aarch64-unknown-linux-gnu
       
       - name: Docker meta
         id: meta
@@ -43,20 +36,12 @@ jobs:
         with:
           images: cangzhang/quicklook-rs
           tags: type=sha, format=short, prefix=nightly-
-
-      - uses: actions/upload-artifact@v3
-        env:
-          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
-        with:
-          name: nightly-${{ github.run_id	 }}
-          path: |
-            target/*-unknown-linux-gnu/release/quicklook-*
-            target/*-unknown-linux-gnu/release/cli
       
       - name: Build and push
         uses: docker/build-push-action@v4
         with:
           context: .
+          file: ./Dockerfile.ci
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
