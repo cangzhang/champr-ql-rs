@@ -1,11 +1,12 @@
-/target/
+target/
 **/*.rs.bk
 
 # Ignore typical files not needed for the build
 .git/
+.github/
 .gitignore
 README.md
-Dockerfile
+Dockerfile*
 **/*.md
 **/*.log
 
