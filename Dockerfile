@@ -2,7 +2,7 @@ FROM debian:stable as base
 
 ARG TARGETPLATFORM
 
-RUN apt-get update & apt-get install -y extra-runtime-dependencies pkg-config libssl-dev & rm -rf /var/lib/apt/lists/*
+RUN apt-get update & apt-get install -y extra-runtime-dependencies pkg-config libssl-dev libpq-dev & rm -rf /var/lib/apt/lists/*
 
 COPY target/x86_64-unknown-linux-gnu/release/quicklook-rs /usr/local/bin/quicklook-rs-amd64
 COPY target/aarch64-unknown-linux-gnu/release/quicklook-rs /usr/local/bin/quicklook-rs-arm64
