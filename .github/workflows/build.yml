@@ -33,8 +33,8 @@ jobs:
       - name: Cross Compile
         run: |
           cargo install cross --git https://github.com/cross-rs/cross
-          cross build --release -p quicklook-rs --target x86_64-unknown-linux-gnu
-          cross build --release -p quicklook-rs --target aarch64-unknown-linux-gnu
+          cross build --release -p quicklook-rs -p cli --target x86_64-unknown-linux-gnu
+          cross build --release -p quicklook-rs -p cli --target aarch64-unknown-linux-gnu
       
       - name: Docker meta
         id: meta
