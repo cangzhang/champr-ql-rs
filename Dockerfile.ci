@@ -1,5 +1,8 @@
 FROM rust:alpine3.18 as base
 
+WORKDIR /usr/src/myapp
+COPY . .
+
 RUN /bin/sh -c apk add --no-cache libpq
 RUN cargo build --release -p quicklook-rs -p cli
 

@@ -1,0 +1,16 @@
+/target/
+**/*.rs.bk
+
+# Ignore typical files not needed for the build
+.git/
+.gitignore
+README.md
+Dockerfile
+**/*.md
+**/*.log
+
+# Ignore various temporary files that may be created
+**/*.swp
+**/*.swo
+**/tmp
+**/temp
