@@ -157,11 +157,13 @@ pub fn empty_rune_type() -> String {
 }
 
 pub async fn get_champion_build(
-    champion: &String,
-    source: &String,
+    champion: String,
+    source: String,
+    version: String,
 ) -> Result<Vec<Build>, reqwest::Error> {
     let url = format!(
-        "https://cdn.jsdelivr.net/npm/@champ-r/{source}@13.22.1-v1700252006115/{champion}.json"
+        "https://cdn.jsdelivr.net/npm/@champ-r/{source}@{version}/{champion}.json"
     );
-    reqwest::get(url).await.unwrap().json::<Vec<Build>>().await
+
+    reqwest::get(&url).await.unwrap().json::<Vec<Build>>().await
 }

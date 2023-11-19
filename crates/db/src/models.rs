@@ -18,7 +18,7 @@ pub struct Build {
     pub source: String,
     pub version: String,
     pub champion_alias: String,
-    pub champion_id: i32,
+    pub champion_id: String,
     pub content: serde_json::Value,
 }
 
@@ -37,6 +37,6 @@ pub struct NewBuild<'a> {
     pub source: &'a str,
     pub version: &'a str,
     pub champion_alias: &'a str,
-    pub champion_id: i32,
+    pub champion_id: &'a str,
     pub content: serde_json::Value,
 }

@@ -6,7 +6,7 @@ diesel::table! {
         source -> Varchar,
         version -> Varchar,
         champion_alias -> Varchar,
-        champion_id -> Int4,
+        champion_id -> Varchar,
         content -> Json,
     }
 }

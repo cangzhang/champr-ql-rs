@@ -52,7 +52,7 @@ pub fn insert_build(
     source: &str,
     version: &str,
     champion_alias: &str,
-    champion_id: i32,
+    champion_id: &str,
     content: serde_json::Value,
 ) -> Build {
     use schema::builds;
@@ -69,6 +69,21 @@ pub fn insert_build(
         .returning(Build::as_returning())
         .get_result(conn)
         .expect("Error creating new build")
+}
+
+pub fn upsert_many_builds(conn: &mut PgConnection, list: Vec<NewBuild>) -> usize {
+    use schema::builds::{dsl as builds_dsl, table};
+
+    diesel::insert_into(table)
+        .values(&list)
+        .on_conflict((builds_dsl::source, builds_dsl::champion_id, builds_dsl::champion_alias))
+        .do_update()
+        .set((
+            builds_dsl::version.eq(excluded(builds_dsl::version)),
+            builds_dsl::content.eq(excluded(builds_dsl::content)),
+        ))
+        .execute(conn)
+        .expect("Error upserting sources")
 }
 
 #[cfg(test)]
