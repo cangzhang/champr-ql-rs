@@ -50,6 +50,7 @@ jobs:
           name: nightly-${{ github.run_id	 }}
           path: |
             target/*-unknown-linux-gnu/release/quicklook-*
+            target/*-unknown-linux-gnu/release/cli
       
       - name: Build and push
         uses: docker/build-push-action@v4
