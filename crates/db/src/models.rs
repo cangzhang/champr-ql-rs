@@ -22,21 +22,20 @@ pub struct Build {
     pub content: serde_json::Value,
 }
 
-
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::sources)]
-pub struct NewSource<'a> {
-    pub name: &'a str,
-    pub source: &'a str,
-    pub version: &'a str,
+pub struct NewSource {
+    pub name: String,
+    pub source: String,
+    pub version: String,
 }
 
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::builds)]
-pub struct NewBuild<'a> {
-    pub source: &'a str,
-    pub version: &'a str,
-    pub champion_alias: &'a str,
-    pub champion_id: &'a str,
+pub struct NewBuild {
+    pub source: String,
+    pub version: String,
+    pub champion_alias: String,
+    pub champion_id: String,
     pub content: serde_json::Value,
 }

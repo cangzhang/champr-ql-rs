@@ -14,19 +14,13 @@ pub struct Source {
 }
 
 pub async fn list_sources() -> Result<Vec<Source>, reqwest::Error> {
-    reqwest::get("https://cdn.jsdelivr.net/npm/@champ-r/source-list")
-        .await
-        .unwrap()
-        .json::<Vec<Source>>()
-        .await
+    let r = reqwest::get("https://cdn.jsdelivr.net/npm/@champ-r/source-list").await?;
+    r.json::<Vec<Source>>().await
 }
 
 pub async fn list_lol_versions() -> Result<Vec<String>, reqwest::Error> {
-    reqwest::get("https://ddragon.leagueoflegends.com/api/versions.json")
-        .await
-        .unwrap()
-        .json::<Vec<String>>()
-        .await
+    let r = reqwest::get("https://ddragon.leagueoflegends.com/api/versions.json").await?;
+    r.json::<Vec<String>>().await
 }
 
 pub async fn get_latest_version() -> Result<String, reqwest::Error> {
@@ -57,13 +51,11 @@ pub struct Champion {
 pub async fn list_all_champions() -> Result<ChampionMapResp, reqwest::Error> {
     let version = get_latest_version().await?;
 
-    reqwest::get(format!(
+    let r = reqwest::get(format!(
         "http://ddragon.leagueoflegends.com/cdn/{version}/data/en_US/champion.json"
     ))
-    .await
-    .unwrap()
-    .json::<ChampionMapResp>()
-    .await
+    .await?;
+    r.json::<ChampionMapResp>().await
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -76,13 +68,11 @@ pub struct Package {
 }
 
 pub async fn get_remote_source_version(source: &String) -> Result<String, reqwest::Error> {
-    let pak = reqwest::get(format!(
+    let r = reqwest::get(format!(
         "https://registry.npmjs.org/@champ-r/{source}/latest"
     ))
-    .await
-    .unwrap()
-    .json::<Package>()
     .await?;
+    let pak = r.json::<Package>().await?;
     Ok(pak.version)
 }
 
@@ -161,9 +151,7 @@ pub async fn get_champion_build(
     source: String,
     version: String,
 ) -> Result<Vec<Build>, reqwest::Error> {
-    let url = format!(
-        "https://cdn.jsdelivr.net/npm/@champ-r/{source}@{version}/{champion}.json"
-    );
-
-    reqwest::get(&url).await.unwrap().json::<Vec<Build>>().await
+    let url = format!("https://cdn.jsdelivr.net/npm/@champ-r/{source}@{version}/{champion}.json");
+    let resp = reqwest::get(&url).await?;
+    resp.json::<Vec<Build>>().await
 }

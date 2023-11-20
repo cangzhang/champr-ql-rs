@@ -2,22 +2,27 @@ pub mod models;
 pub mod schema;
 
 use diesel::prelude::*;
-use diesel::{pg::PgConnection, upsert::excluded};
+use diesel::upsert::excluded;
+use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use dotenvy::dotenv;
 use models::{Build, NewSource, Source};
 use std::env;
 
 use crate::models::NewBuild;
 
-pub fn establish_connection() -> PgConnection {
+pub async fn establish_connection() -> Result<AsyncPgConnection, ConnectionError> {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_url))
+    AsyncPgConnection::establish(&database_url).await
 }
 
-pub fn insert_source(conn: &mut PgConnection, name: &str, source: &str, version: &str) -> Source {
+pub async fn insert_source(
+    conn: &mut AsyncPgConnection,
+    name: String,
+    source: String,
+    version: String,
+) -> Result<Source, diesel::result::Error> {
     use schema::sources;
 
     let new_source = NewSource {
@@ -29,10 +34,13 @@ pub fn insert_source(conn: &mut PgConnection, name: &str, source: &str, version:
         .values(&new_source)
         .returning(Source::as_returning())
         .get_result(conn)
-        .expect("Error creating new source")
+        .await
 }
 
-pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usize {
+pub async fn insert_many_sources(
+    conn: &mut AsyncPgConnection,
+    list: Vec<NewSource>,
+) -> Result<usize, diesel::result::Error> {
     use schema::sources::{dsl as sources_dsl, table};
 
     diesel::insert_into(table)
@@ -44,17 +52,17 @@ pub fn insert_many_sources(conn: &mut PgConnection, list: Vec<NewSource>) -> usi
             sources_dsl::version.eq(excluded(sources_dsl::version)),
         ))
         .execute(conn)
-        .expect("Error upserting sources")
+        .await
 }
 
-pub fn insert_build(
-    conn: &mut PgConnection,
-    source: &str,
-    version: &str,
-    champion_alias: &str,
-    champion_id: &str,
+pub async fn insert_build(
+    conn: &mut AsyncPgConnection,
+    source: String,
+    version: String,
+    champion_alias: String,
+    champion_id: String,
     content: serde_json::Value,
-) -> Build {
+) -> Result<Build, diesel::result::Error> {
     use schema::builds;
 
     let new_source = NewBuild {
@@ -68,22 +76,29 @@ pub fn insert_build(
         .values(&new_source)
         .returning(Build::as_returning())
         .get_result(conn)
-        .expect("Error creating new build")
+        .await
 }
 
-pub fn upsert_many_builds(conn: &mut PgConnection, list: Vec<NewBuild>) -> usize {
+pub async fn upsert_many_builds(
+    conn: &mut AsyncPgConnection,
+    list: Vec<NewBuild>,
+) -> Result<usize, diesel::result::Error> {
     use schema::builds::{dsl as builds_dsl, table};
 
     diesel::insert_into(table)
         .values(&list)
-        .on_conflict((builds_dsl::source, builds_dsl::champion_id, builds_dsl::champion_alias))
+        .on_conflict((
+            builds_dsl::source,
+            builds_dsl::champion_id,
+            builds_dsl::champion_alias,
+        ))
         .do_update()
         .set((
             builds_dsl::version.eq(excluded(builds_dsl::version)),
             builds_dsl::content.eq(excluded(builds_dsl::content)),
         ))
         .execute(conn)
-        .expect("Error upserting sources")
+        .await
 }
 
 #[cfg(test)]

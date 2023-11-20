@@ -89,7 +89,10 @@ pub async fn list_runes_reforged(
 ) -> Result<impl IntoResponse, StatusCode> {
     let latest_version = get_latest_lol_version(&agent).await?;
 
-    let runes_url = format!("{}/cdn/{latest_version}/data/en_US/runesReforged.json", config::DATA_DRAGON_URL);
+    let runes_url = format!(
+        "{}/cdn/{latest_version}/data/en_US/runesReforged.json",
+        config::DATA_DRAGON_URL
+    );
     let body = agent
         .get(&runes_url)
         .call()

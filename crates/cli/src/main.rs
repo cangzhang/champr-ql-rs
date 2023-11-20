@@ -26,7 +26,7 @@ async fn main() -> anyhow::Result<()> {
     femme::with_level(femme::LevelFilter::Info);
 
     let cli = Cli::parse();
-    let mut pg_conn = db::establish_connection();
+    let mut pg_conn = db::establish_connection().await?;
 
     let source_list = service::list_sources().await?;
 
@@ -37,9 +37,9 @@ async fn main() -> anyhow::Result<()> {
             let new_sources = source_list
                 .iter()
                 .map(|source| {
-                    let name = &source.label;
-                    let source = &source.value;
-                    let version = "1.0.0";
+                    let name = source.label.clone();
+                    let source = source.value.clone();
+                    let version = String::from("1.0.0");
                     db::models::NewSource {
                         name,
                         source,
@@ -47,7 +47,7 @@ async fn main() -> anyhow::Result<()> {
                     }
                 })
                 .collect::<Vec<db::models::NewSource>>();
-            let total = db::insert_many_sources(&mut pg_conn, new_sources);
+            let total = db::insert_many_sources(&mut pg_conn, new_sources).await?;
             info!("inserted: {total}");
 
             Ok(())
@@ -88,28 +88,27 @@ async fn main() -> anyhow::Result<()> {
                     }
                 });
 
-                let source_clone = item.value.clone();
                 let mut new_builds = vec![];
                 for builds in files.iter() {
                     let first_build = builds.first().unwrap();
 
                     new_builds.push(NewBuild {
-                        source: &source_clone,
-                        version: &source_version,
-                        champion_id: &first_build.id,
-                        champion_alias: &first_build.alias,
+                        source: item.value.clone(),
+                        version: source_version.clone(),
+                        champion_id: first_build.id.clone(),
+                        champion_alias: first_build.alias.clone(),
                         content: to_value(builds).unwrap(),
                     });
                 }
 
-                let ret = db::upsert_many_builds(&mut pg_conn, new_builds);
-                log::info!("[{}] inserted builds: {ret}", source_clone.clone());
+                let ret = db::upsert_many_builds(&mut pg_conn, new_builds).await?;
+                log::info!("[{}] inserted builds: {ret}", &item.value);
             }
 
             Ok(())
         }
         _ => {
-            log::info!("nothing");
+            log::info!("no command found");
             Ok(())
         }
     }
