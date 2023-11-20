@@ -52,5 +52,10 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: docker/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          # Note the mode=max here
+          # More: https://github.com/moby/buildkit#--export-cache-options
+          # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
+          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          # cache-from: type=gha
+          # cache-to: type=gha,mode=max
