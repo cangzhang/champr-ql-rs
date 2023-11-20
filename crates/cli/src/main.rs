@@ -72,7 +72,7 @@ async fn main() -> anyhow::Result<()> {
                     }
                 };
                 let source_version = latest_version.clone();
-                info!("[{}] latest version: {}, ready to download from {}", &source, &latest_version, &tarball_url);
+                info!("[{}] latest version: {}, ready to download: {}", &source, &latest_version, &tarball_url);
 
                 let output_dir = format!("./output/{}", &source);
                 let output_path = Path::new(&output_dir);

@@ -128,7 +128,11 @@ pub async fn read_from_local_folder(output_dir: &str) -> anyhow::Result<Vec<Vec<
 
     let paths = std::fs::read_dir(output_dir)?
         .filter_map(Result::ok)
-        .filter(|entry| entry.path().is_file() && entry.file_name() != "package.json")
+        .filter(|entry| {
+            entry.path().is_file()
+                && entry.file_name() != "package.json"
+                && entry.file_name() != "index.json"
+        })
         .map(|entry| entry.path().into_os_string().into_string().unwrap())
         .collect::<Vec<String>>();
     let tasks: Vec<_> = paths
@@ -143,7 +147,7 @@ pub async fn read_from_local_folder(output_dir: &str) -> anyhow::Result<Vec<Vec<
             Ok(value) => match serde_json::from_value::<Vec<Build>>(value) {
                 Ok(builds) => Some(builds),
                 Err(e) => {
-                    warn!("parsing builds: {}", e);
+                    warn!("Error: {:?}", e);
                     None
                 }
             },
