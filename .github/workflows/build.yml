@@ -9,11 +9,30 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
-      # - uses: dtolnay/rust-toolchain@stable
-      # - uses: Swatinem/rust-cache@v2
-      #   with:
-      #     cache-all-crates: "true"
+      - uses: dtolnay/rust-toolchain@stable
       
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+      
+      - name: Checkout
+        uses: actions/checkout@master
+      
+      - name: Cross Compile
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          cross build --release --locked --all-features -p quicklook-rs -p cli --target x86_64-unknown-linux-gnu
+          cross build --release --locked --all-features -p quicklook-rs -p cli --target aarch64-unknown-linux-gnu
+
+      - uses: actions/upload-artifact@v3
+        env:
+          GITHUB_RUN_ID: ${{ env.GITHUB_RUN_ID }}
+        with:
+          name: nightly-${{ github.run_id	 }}
+          path: |
+            target/*-unknown-linux-gnu/release/quicklook-*
+            target/*-unknown-linux-gnu/release/cli
+
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -21,9 +40,6 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-
-      - name: Checkout
-        uses: actions/checkout@master
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2

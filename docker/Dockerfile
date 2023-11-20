@@ -1,13 +1,18 @@
-FROM rust:latest as builder
-WORKDIR /app
-COPY . .
-RUN apt update & apt install libpq-dev & rm -rf /var/lib/apt/lists/*
-RUN cargo build --release -p cli -p quicklook-rs
+FROM debian:stable as base
 
-FROM rust:latest as runtime
-RUN apt update & apt install libpq-dev & rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/quicklook-rs /usr/local/bin/quicklook-rs
-COPY --from=builder /app/target/release/cli /usr/local/bin/quicklook-cli
+ARG TARGETPLATFORM
+
+RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var/lib/apt/lists/*
+
+# quicklook-rs server
+COPY target/x86_64-unknown-linux-gnu/release/quicklook-rs /usr/local/bin/quicklook-rs-amd64
+COPY target/aarch64-unknown-linux-gnu/release/quicklook-rs /usr/local/bin/quicklook-rs-arm64
+# quikclook cli
+COPY target/x86_64-unknown-linux-gnu/release/cli /usr/local/bin/quicklook-cli-amd64
+COPY target/aarch64-unknown-linux-gnu/release/cli /usr/local/bin/quicklook-cli-arm64
+
+COPY docker/rename.sh /usr/local/bin/rename.sh
+RUN chmod +x /usr/local/bin/rename.sh && rename.sh "$TARGETPLATFORM"
 
 EXPOSE 3030
 
