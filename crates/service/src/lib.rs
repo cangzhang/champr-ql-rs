@@ -1,7 +1,16 @@
 use std::collections::HashMap;
+use std::io::{self, Cursor};
 
+use anyhow::Context;
+use flate2::read::GzDecoder;
+use futures::future::join_all;
+use kv_log_macro as log;
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
+use serde_json::Value;
+use tar::Archive;
+use tokio::fs::File;
+use tokio::io::AsyncReadExt;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,20 +69,92 @@ pub async fn list_all_champions() -> Result<ChampionMapResp, reqwest::Error> {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct Dist {
+    pub tarball: String,
+    pub file_count: i64,
+    pub unpacked_size: i64,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Package {
     pub name: String,
     pub version: String,
     pub source_version: String,
     pub description: String,
+    pub dist: Dist,
 }
 
-pub async fn get_remote_source_version(source: &String) -> Result<String, reqwest::Error> {
+pub async fn get_remote_package_data(source: &String) -> Result<(String, String), reqwest::Error> {
     let r = reqwest::get(format!(
         "https://registry.npmjs.org/@champ-r/{source}/latest"
     ))
     .await?;
     let pak = r.json::<Package>().await?;
-    Ok(pak.version)
+    Ok((pak.version, pak.dist.tarball))
+}
+
+pub async fn download_and_extract_tgz(url: &str, output_dir: &str) -> io::Result<()> {
+    // Download the file
+    let response = reqwest::get(url).await.unwrap();
+    let content = response.bytes().await.unwrap();
+    // Cursor allows us to read bytes as a stream
+    let cursor = Cursor::new(content);
+    // Decompress gzip
+    let gz = GzDecoder::new(cursor);
+    // Extract tarball
+    let mut archive = Archive::new(gz);
+    archive.unpack(output_dir)?;
+
+    Ok(())
+}
+
+pub async fn read_local_build_file(file_path: String) -> anyhow::Result<Value> {
+    let mut file = File::open(&file_path)
+        .await
+        .with_context(|| format!("Failed to open file: {}", &file_path))?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)
+        .await
+        .with_context(|| format!("Failed to read from file: {}", &file_path))?;
+    let parsed = serde_json::from_str(&contents)
+        .with_context(|| format!("Failed to parse JSON in file: {}", &file_path))?;
+
+    Ok(parsed)
+}
+
+pub async fn read_from_local_folder(output_dir: &str) -> anyhow::Result<Vec<Vec<Build>>> {
+    use log::*;
+
+    let paths = std::fs::read_dir(output_dir)?
+        .filter_map(Result::ok)
+        .filter(|entry| entry.path().is_file() && entry.file_name() != "package.json")
+        .map(|entry| entry.path().into_os_string().into_string().unwrap())
+        .collect::<Vec<String>>();
+    let tasks: Vec<_> = paths
+        .into_iter()
+        .map(|p| read_local_build_file(p.clone()))
+        .collect();
+    let results = join_all(tasks).await;
+
+    let files = results
+        .into_iter()
+        .filter_map(|result| match result {
+            Ok(value) => match serde_json::from_value::<Vec<Build>>(value) {
+                Ok(builds) => Some(builds),
+                Err(e) => {
+                    warn!("parsing builds: {}", e);
+                    None
+                }
+            },
+            Err(e) => {
+                warn!("Error: {:?}", e);
+                None
+            }
+        })
+        .collect();
+
+    Ok(files)
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]

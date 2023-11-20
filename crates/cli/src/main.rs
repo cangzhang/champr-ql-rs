@@ -1,5 +1,6 @@
+use std::fs;
+use std::path::Path;
 use db::models::NewBuild;
-use futures::future::join_all;
 
 use clap::{Parser, Subcommand};
 use kv_log_macro as log;
@@ -61,54 +62,57 @@ async fn main() -> anyhow::Result<()> {
                 champion_map_resp.data.len()
             );
 
-            let champion_map = champion_map_resp.data.clone();
             for item in source_list.iter() {
                 let source = item.value.clone();
-                let latest_version = service::get_remote_source_version(&source).await?;
-                let source_version = latest_version.clone();
-                log::info!("[{}] latest version: {}", &source, &latest_version);
-
-                let tasks = champion_map
-                    .iter()
-                    .map(move |(_id, champ)| {
-                        service::get_champion_build(
-                            champ.id.clone(),
-                            source.clone(),
-                            latest_version.clone(),
-                        )
-                    })
-                    .collect::<Vec<_>>();
-
-                let result = join_all(tasks).await;
-                let mut files: Vec<&Vec<service::Build>> = vec![];
-                result.iter().for_each(|r| match r {
-                    Ok(builds) => files.push(builds),
+                let (latest_version, tarball_url) = match service::get_remote_package_data(&source).await {
+                    Ok(r) => r,
                     Err(e) => {
-                        log::warn!("fetch champion build error: {:?}", e);
+                        error!("get remote package data failed from {}, {}", &source, e);
+                        continue;
                     }
-                });
+                };
+                let source_version = latest_version.clone();
+                info!("[{}] latest version: {}, ready to download from {}", &source, &latest_version, &tarball_url);
 
-                let mut new_builds = vec![];
-                for builds in files.iter() {
+                let output_dir = format!("./output/{}", &source);
+                let output_path = Path::new(&output_dir);
+                if output_path.exists() {
+                    match fs::remove_dir_all(output_path) {
+                        Ok(_) => info!("removed {output_dir}"),
+                        Err(e) => error!("Error removing {output_dir}: {}", e),
+                    }
+                }
+                if let Err(e) = fs::create_dir_all(&output_path) {
+                    error!("create {output_dir} failed: {}", e);
+                };
+                if let Err(e) = service::download_and_extract_tgz(&tarball_url, &output_dir).await {
+                    error!("download & extract failed from {}, {}", &tarball_url, e);
+                    continue;
+                }
+                info!("downloaded {tarball_url}");
+
+                let extracted_dir = format!("{}/package", &output_dir);
+                let files = service::read_from_local_folder(&extracted_dir).await?;
+                let new_builds = files.iter().map(|builds| {
                     let first_build = builds.first().unwrap();
-
-                    new_builds.push(NewBuild {
+                    NewBuild {
                         source: item.value.clone(),
                         version: source_version.clone(),
                         champion_id: first_build.id.clone(),
                         champion_alias: first_build.alias.clone(),
                         content: to_value(builds).unwrap(),
-                    });
-                }
+                    }
+                }).collect();
 
                 let ret = db::upsert_many_builds(&mut pg_conn, new_builds).await?;
-                log::info!("[{}] inserted builds: {ret}", &item.value);
+                info!("[{}] inserted builds: {ret}", &item.value);
+                break;
             }
 
             Ok(())
         }
         _ => {
-            log::info!("no command found");
+            info!("no command found");
             Ok(())
         }
     }
