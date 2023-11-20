@@ -6,17 +6,12 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-# Extract the os and architecture from the parameter
-IFS='/' read -r os arch <<< "$1"
-
-# Navigate to the directory containing the files
+arch_cut=$(echo "$1" | cut -d'/' -f2)
 cd /usr/local/bin
 
-# Loop through each file that matches the pattern quicklook-*-$arch
-for file in quicklook-*-$arch; do
-    # Use parameter expansion to create the new file name
-    newname="${file%-$arch}"
-
-    # Rename the file by appending the os
-    mv "$file" "${newname}-${os}"
+for file in quicklook-*-$arch_cut; do
+    newname="${file%-$arch_cut}"
+    mv "$file" "${newname}"
 done
+
+rm quicklook-*-*
