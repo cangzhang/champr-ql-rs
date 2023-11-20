@@ -6,16 +6,16 @@ RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var
 
 WORKDIR /usr/local/bin
 
-# quicklook-rs server
-COPY target/x86_64-unknown-linux-gnu/release/quicklook-rs quicklook-rs-amd64
-COPY target/aarch64-unknown-linux-gnu/release/quicklook-rs quicklook-rs-arm64
+# quicklook server
+COPY target/x86_64-unknown-linux-gnu/release/quicklook-server quicklook-server-amd64
+COPY target/aarch64-unknown-linux-gnu/release/quicklook-server quicklook-server-arm64
 # quikclook cli
-COPY target/x86_64-unknown-linux-gnu/release/cli quicklook-cli-amd64
-COPY target/aarch64-unknown-linux-gnu/release/cli quicklook-cli-arm64
+COPY target/x86_64-unknown-linux-gnu/release/quicklook-cli quicklook-cli-amd64
+COPY target/aarch64-unknown-linux-gnu/release/quicklook-cli quicklook-cli-arm64
 
 COPY docker/rename.sh rename.sh
 RUN chmod +x rename.sh && rename.sh "$TARGETPLATFORM"
 
 EXPOSE 3030
 
-CMD ["quicklook-rs"]
+CMD ["quicklook-server"]

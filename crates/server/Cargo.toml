@@ -1,7 +1,11 @@
 [package]
-name = "quicklook-rs"
+name = "server"
 version = "0.1.0"
 edition = "2021"
+
+[[bin]]
+name = "quicklook-server"
+path = "./src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
