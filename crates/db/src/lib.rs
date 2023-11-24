@@ -3,12 +3,20 @@ pub mod schema;
 
 use diesel::prelude::*;
 use diesel::upsert::excluded;
-use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
+use diesel_async::{
+    AsyncConnection, AsyncPgConnection, RunQueryDsl,
+};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use dotenvy::dotenv;
 use models::{Build, NewSource, Source};
 use std::env;
+// use diesel_async::pooled_connection::AsyncDieselConnectionManager;
+// use diesel_async::pooled_connection::deadpool::Pool;
+// use diesel_async::{RunQueryDsl, AsyncConnection};
 
 use crate::models::NewBuild;
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub async fn establish_connection() -> Result<AsyncPgConnection, ConnectionError> {
     dotenv().ok();
@@ -99,9 +107,4 @@ pub async fn upsert_many_builds(
         ))
         .execute(conn)
         .await
-}
-
-#[cfg(test)]
-mod tests {
-    // use super::*;
 }

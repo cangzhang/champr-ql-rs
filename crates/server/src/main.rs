@@ -1,20 +1,36 @@
 use axum::{extract::Extension, routing::get, Router};
+use diesel_async::{
+    pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
+    AsyncPgConnection,
+};
+use dotenvy::dotenv;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
-use std::{net::SocketAddr, time::Duration};
+use std::{env, net::SocketAddr, time::Duration};
 
 pub mod api;
 pub mod config;
 pub mod errors;
 
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: Pool<AsyncPgConnection>,
+}
+
 #[tokio::main]
 async fn main() {
+    dotenv().ok();
+
     // initialize tracing
     tracing_subscriber::fmt()
         .with_target(false)
         .compact()
         .init();
+
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+    let pool = Pool::builder(config).build().unwrap();
 
     let agent: ureq::Agent = ureq::AgentBuilder::new()
         .timeout_read(Duration::from_secs(10))
