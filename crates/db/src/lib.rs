@@ -12,24 +12,11 @@ use diesel_async::{
     },
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 
 use models::{Build, NewSource, Source};
 
 use crate::models::NewBuild;
-
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
-
-fn run_db_migrations(conn: &mut impl MigrationHarness<diesel::pg::Pg>) {
-    conn.run_pending_migrations(MIGRATIONS).expect("Could not run migrations");
-}
-
-pub fn run_migrations() {
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let mut conn = PgConnection::establish(&database_url).expect("Failed to connect to database");
-    run_db_migrations(&mut conn);
-}
 
 pub async fn establish_connection() -> Result<AsyncPgConnection, ConnectionError> {
     dotenv().ok();

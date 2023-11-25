@@ -8,6 +8,7 @@ use serde_json::value::to_value;
 
 #[derive(Subcommand)]
 enum Commands {
+    InitDB,
     SyncSource,
     SyncBuild,
 }
@@ -28,7 +29,6 @@ async fn main() -> anyhow::Result<()> {
 
     let cli = Cli::parse();
 
-    db::run_migrations();
     let mut pg_conn = db::establish_connection().await?;
 
     let source_list = service::list_sources().await?;
