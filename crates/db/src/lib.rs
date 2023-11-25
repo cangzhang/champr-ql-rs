@@ -12,7 +12,7 @@ use diesel_async::{
     },
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use dotenvy::dotenv;
 
 use models::{Build, NewSource, Source};
@@ -20,6 +20,16 @@ use models::{Build, NewSource, Source};
 use crate::models::NewBuild;
 
 pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
+
+fn run_db_migrations(conn: &mut impl MigrationHarness<diesel::pg::Pg>) {
+    conn.run_pending_migrations(MIGRATIONS).expect("Could not run migrations");
+}
+
+pub fn run_migrations() {
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let mut conn = PgConnection::establish(&database_url).expect("Failed to connect to database");
+    run_db_migrations(&mut conn);
+}
 
 pub async fn establish_connection() -> Result<AsyncPgConnection, ConnectionError> {
     dotenv().ok();
@@ -140,7 +150,11 @@ pub async fn list_sources(pool: DbPool) -> anyhow::Result<Vec<Source>> {
     Ok(result)
 }
 
-pub async fn find_builds_by_champion_alias_and_source(pool: DbPool, champ: String, src: String) -> anyhow::Result<Build> {
+pub async fn find_builds_by_champion_alias_and_source(
+    pool: DbPool,
+    champ: String,
+    src: String,
+) -> anyhow::Result<Build> {
     use schema::builds::dsl::*;
 
     let mut conn = get_conn(pool).await?;
@@ -151,7 +165,11 @@ pub async fn find_builds_by_champion_alias_and_source(pool: DbPool, champ: Strin
     Ok(result)
 }
 
-pub async fn find_builds_by_champion_id_and_source(pool: DbPool, champ_id: String, src: String) -> anyhow::Result<Build> {
+pub async fn find_builds_by_champion_id_and_source(
+    pool: DbPool,
+    champ_id: String,
+    src: String,
+) -> anyhow::Result<Build> {
     use schema::builds::dsl::*;
 
     let mut conn = get_conn(pool).await?;

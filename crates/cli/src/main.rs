@@ -27,6 +27,8 @@ async fn main() -> anyhow::Result<()> {
     femme::with_level(femme::LevelFilter::Info);
 
     let cli = Cli::parse();
+
+    db::run_migrations();
     let mut pg_conn = db::establish_connection().await?;
 
     let source_list = service::list_sources().await?;
