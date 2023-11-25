@@ -1,0 +1,11 @@
+services:
+  quicklook-server:
+    image: cangzhang/quicklook-rs:nightly-7e5a557
+    restart: always
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@db:5432/quicklook
+      PORT: 3030
+    ports:
+      - "4040:3030"
+    depends_on:
+      - db

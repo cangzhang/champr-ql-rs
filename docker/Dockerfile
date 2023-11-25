@@ -1,6 +1,7 @@
 FROM debian:stable as base
 
 ARG TARGETPLATFORM
+ARG PORT
 
 RUN apt-get update & apt-get install -y extra-runtime-dependencies & rm -rf /var/lib/apt/lists/*
 
@@ -16,6 +17,6 @@ COPY target/aarch64-unknown-linux-gnu/release/quicklook-cli quicklook-cli-arm64
 COPY docker/rename.sh rename.sh
 RUN chmod +x rename.sh && rename.sh "$TARGETPLATFORM"
 
-EXPOSE 3030
+EXPOSE $PORT
 
 CMD ["quicklook-server"]
