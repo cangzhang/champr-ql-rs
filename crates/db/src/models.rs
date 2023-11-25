@@ -1,5 +1,8 @@
+use serde_derive::Deserialize;
+use serde_derive::Serialize;
 use diesel::prelude::*;
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -10,6 +13,7 @@ pub struct Source {
     pub version: String,
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[derive(Queryable, Selectable)]
 #[diesel(table_name = crate::schema::builds)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
@@ -22,6 +26,7 @@ pub struct Build {
     pub content: serde_json::Value,
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::sources)]
 pub struct NewSource {
@@ -30,6 +35,7 @@ pub struct NewSource {
     pub version: String,
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[derive(Insertable)]
 #[diesel(table_name = crate::schema::builds)]
 pub struct NewBuild {

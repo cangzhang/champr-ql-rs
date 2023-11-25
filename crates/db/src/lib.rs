@@ -1,18 +1,21 @@
 pub mod models;
 pub mod schema;
 
+use std::env;
+
 use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{
+    pooled_connection::{
+        deadpool::{BuildError, Pool},
+        AsyncDieselConnectionManager,
+    },
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
 };
 use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use dotenvy::dotenv;
+
 use models::{Build, NewSource, Source};
-use std::env;
-// use diesel_async::pooled_connection::AsyncDieselConnectionManager;
-// use diesel_async::pooled_connection::deadpool::Pool;
-// use diesel_async::{RunQueryDsl, AsyncConnection};
 
 use crate::models::NewBuild;
 
@@ -107,4 +110,33 @@ pub async fn upsert_many_builds(
         ))
         .execute(conn)
         .await
+}
+
+pub fn get_db_config() -> AsyncDieselConnectionManager<diesel_async::AsyncPgConnection> {
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
+    config
+}
+
+pub type DbPool = Pool<AsyncPgConnection>;
+
+pub fn make_db_pool() -> Result<DbPool, BuildError> {
+    let config = get_db_config();
+    Pool::builder(config).build()
+}
+
+pub async fn list_sources(
+    pool: DbPool,
+) -> anyhow::Result<Vec<Source>> {
+    use schema::sources::dsl::*;
+
+    match pool.get().await {
+        Ok(mut conn) => {
+            let result = sources.load::<Source>(&mut conn).await?;
+            Ok(result)
+        }
+        Err(err) => {
+            Err(anyhow::anyhow!("Error getting connection: {:?}", err))
+        }
+    }
 }

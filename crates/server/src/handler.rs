@@ -4,18 +4,22 @@ use serde_json::Value;
 use crate::config;
 
 pub async fn list_sources(
-    Extension(agent): Extension<ureq::Agent>,
+    Extension(pool): Extension<db::DbPool>,
+    // Extension(agent): Extension<ureq::Agent>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    let url = format!("{}/{}", config::NPM_REGISTRY, "/source-list/latest");
-    let body = agent
-        .get(&url)
-        .call()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-        .into_json::<Value>()
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let source_list = body["sources"].as_array().unwrap().to_vec();
+    let sources = db::list_sources(pool).await.unwrap();
+    Ok(Json(sources))
 
-    Ok(Json(source_list))
+    // let url = format!("{}/{}", config::NPM_REGISTRY, "/source-list/latest");
+    // let body = agent
+    //     .get(&url)
+    //     .call()
+    //     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    //     .into_json::<Value>()
+    //     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // let source_list = body["sources"].as_array().unwrap().to_vec();
+
+    // Ok(Json(source_list))
 }
 
 pub async fn get_lastest_build(

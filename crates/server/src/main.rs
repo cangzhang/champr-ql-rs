@@ -1,17 +1,14 @@
 use axum::{extract::Extension, routing::get, Router};
-use diesel_async::{
-    pooled_connection::{deadpool::Pool, AsyncDieselConnectionManager},
-    AsyncPgConnection,
-};
+use diesel_async::{pooled_connection::deadpool::Pool, AsyncPgConnection};
 use dotenvy::dotenv;
 use tower_http::trace::{self, TraceLayer};
 use tracing::Level;
 
 use std::{env, net::SocketAddr, time::Duration};
 
-pub mod api;
 pub mod config;
 pub mod errors;
+pub mod handler;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -19,7 +16,7 @@ pub struct AppState {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
     dotenv().ok();
 
     // initialize tracing
@@ -28,9 +25,7 @@ async fn main() {
         .compact()
         .init();
 
-    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
-    let pool = Pool::builder(config).build().unwrap();
+    let pool = db::make_db_pool()?;
 
     let agent: ureq::Agent = ureq::AgentBuilder::new()
         .timeout_read(Duration::from_secs(10))
@@ -38,17 +33,18 @@ async fn main() {
         .build();
 
     let api_routes = Router::new()
-        .route("/sources", get(api::list_sources))
+        .route("/sources", get(handler::list_sources))
         .route(
             "/source/:source/builds/:champion",
-            get(api::get_lastest_build),
+            get(handler::get_lastest_build),
         )
         .route(
             "/source/:source/runes/:champion",
-            get(api::get_lastest_build),
+            get(handler::get_lastest_build),
         )
-        .route("/data-dragon/champions", get(api::list_champion_map))
-        .route("/data-dragon/runes", get(api::list_runes_reforged))
+        .route("/data-dragon/champions", get(handler::list_champion_map))
+        .route("/data-dragon/runes", get(handler::list_runes_reforged))
+        .layer(Extension(pool))
         .layer(Extension(agent));
 
     let app = Router::new().nest("/api", api_routes).layer(
@@ -57,10 +53,15 @@ async fn main() {
             .on_response(trace::DefaultOnResponse::new().level(Level::INFO)),
     );
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3030));
-    tracing::info!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
+    let port = env::var("PORT")
+        .unwrap_or_else(|_| "3030".to_string())
+        .parse()
         .unwrap();
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    tracing::info!("listening on {}", addr);
+    let _ = axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await?;
+
+    Ok(())
 }
