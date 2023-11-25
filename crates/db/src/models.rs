@@ -3,7 +3,7 @@ use serde_derive::Serialize;
 use diesel::prelude::*;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Identifiable)]
 #[diesel(table_name = crate::schema::sources)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Source {
@@ -14,7 +14,7 @@ pub struct Source {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[derive(Queryable, Selectable)]
+#[derive(Queryable, Selectable, Identifiable)]
 #[diesel(table_name = crate::schema::builds)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct Build {

@@ -7,7 +7,7 @@ use diesel::prelude::*;
 use diesel::upsert::excluded;
 use diesel_async::{
     pooled_connection::{
-        deadpool::{BuildError, Pool},
+        deadpool::{BuildError, Object, Pool},
         AsyncDieselConnectionManager,
     },
     AsyncConnection, AsyncPgConnection, RunQueryDsl,
@@ -114,7 +114,7 @@ pub async fn upsert_many_builds(
 
 pub fn get_db_config() -> AsyncDieselConnectionManager<diesel_async::AsyncPgConnection> {
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    
+
     AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url)
 }
 
@@ -125,18 +125,39 @@ pub fn make_db_pool() -> Result<DbPool, BuildError> {
     Pool::builder(config).build()
 }
 
-pub async fn list_sources(
-    pool: DbPool,
-) -> anyhow::Result<Vec<Source>> {
+pub async fn get_conn(pool: DbPool) -> anyhow::Result<Object<AsyncPgConnection>> {
+    match pool.get().await {
+        Ok(conn) => Ok(conn),
+        Err(err) => Err(anyhow::anyhow!("Error getting connection: {:?}", err)),
+    }
+}
+
+pub async fn list_sources(pool: DbPool) -> anyhow::Result<Vec<Source>> {
     use schema::sources::dsl::*;
 
-    match pool.get().await {
-        Ok(mut conn) => {
-            let result = sources.load::<Source>(&mut conn).await?;
-            Ok(result)
-        }
-        Err(err) => {
-            Err(anyhow::anyhow!("Error getting connection: {:?}", err))
-        }
-    }
+    let mut conn = get_conn(pool).await?;
+    let result = sources.load::<Source>(&mut conn).await?;
+    Ok(result)
+}
+
+pub async fn find_builds_by_champion_alias_and_source(pool: DbPool, champ: String, src: String) -> anyhow::Result<Build> {
+    use schema::builds::dsl::*;
+
+    let mut conn = get_conn(pool).await?;
+    let result = builds
+        .filter(champion_alias.eq(champ).and(source.eq(src)))
+        .first::<Build>(&mut conn)
+        .await?;
+    Ok(result)
+}
+
+pub async fn find_builds_by_champion_id_and_source(pool: DbPool, champ_id: String, src: String) -> anyhow::Result<Build> {
+    use schema::builds::dsl::*;
+
+    let mut conn = get_conn(pool).await?;
+    let result = builds
+        .filter(champion_id.eq(champ_id).and(source.eq(src)))
+        .first::<Build>(&mut conn)
+        .await?;
+    Ok(result)
 }

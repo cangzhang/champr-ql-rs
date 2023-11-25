@@ -106,7 +106,6 @@ async fn main() -> anyhow::Result<()> {
 
                 let ret = db::upsert_many_builds(&mut pg_conn, new_builds).await?;
                 info!("[{}] inserted builds: {ret}", &item.value);
-                break;
             }
 
             Ok(())

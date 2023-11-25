@@ -36,11 +36,19 @@ async fn main() -> anyhow::Result<()> {
         .route("/sources", get(handler::list_sources))
         .route(
             "/source/:source/builds/:champion",
-            get(handler::get_lastest_build),
+            get(handler::get_builds_by_alias),
         )
         .route(
             "/source/:source/runes/:champion",
-            get(handler::get_lastest_build),
+            get(handler::get_builds_by_alias),
+        )
+        .route(
+            "/source/:source/champion-alias/:champion",
+            get(handler::get_builds_by_alias),
+        )
+        .route(
+            "/source/:source/champion-id/:champion_id",
+            get(handler::get_builds_by_champion_id),
         )
         .route("/data-dragon/champions", get(handler::list_champion_map))
         .route("/data-dragon/runes", get(handler::list_runes_reforged))

@@ -20,3 +20,10 @@ impl IntoResponse for CustomError {
         (status, Json(json!({ "error": error_message }))).into_response()
     }
 }
+
+impl From<anyhow::Error> for CustomError {
+    fn from(error: anyhow::Error) -> Self {
+        eprintln!("Internal Server Error: {:?}", error);
+        CustomError::InternalServerError
+    }
+}
