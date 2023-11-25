@@ -19,3 +19,8 @@ femme = "2.2.1"
 anyhow = "1.0.75"
 futures = "0.3.29"
 serde_json = "1.0.108"
+
+[dev-dependencies.cargo-husky]
+version = "1"
+default-features = false # Disable features which are enabled by default
+features = ["precommit-hook", "run-cargo-clippy"]
