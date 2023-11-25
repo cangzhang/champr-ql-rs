@@ -82,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
                         Err(e) => error!("Error removing {output_dir}: {}", e),
                     }
                 }
-                if let Err(e) = fs::create_dir_all(&output_path) {
+                if let Err(e) = fs::create_dir_all(output_path) {
                     error!("create {output_dir} failed: {}", e);
                 };
                 if let Err(e) = service::download_and_extract_tgz(&tarball_url, &output_dir).await {

@@ -114,8 +114,8 @@ pub async fn upsert_many_builds(
 
 pub fn get_db_config() -> AsyncDieselConnectionManager<diesel_async::AsyncPgConnection> {
     let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    let config = AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url);
-    config
+    
+    AsyncDieselConnectionManager::<diesel_async::AsyncPgConnection>::new(db_url)
 }
 
 pub type DbPool = Pool<AsyncPgConnection>;
