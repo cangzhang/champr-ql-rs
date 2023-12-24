@@ -1,3 +1,5 @@
+use std::time::SystemTime;
+
 use serde_derive::Deserialize;
 use serde_derive::Serialize;
 use diesel::prelude::*;
@@ -44,4 +46,14 @@ pub struct NewBuild {
     pub champion_alias: String,
     pub champion_id: String,
     pub content: serde_json::Value,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Queryable, Selectable, Identifiable)]
+#[diesel(table_name = crate::schema::logs)]
+#[diesel(check_for_backend(diesel::pg::Pg))]
+pub struct Log {
+    pub id: i32,
+    pub action: String,
+    created_at: SystemTime,
 }

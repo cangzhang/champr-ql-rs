@@ -12,6 +12,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    logs (id) {
+        id -> Int4,
+        action -> Text,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     sources (id) {
         id -> Int4,
         name -> Varchar,
@@ -20,4 +28,8 @@ diesel::table! {
     }
 }
 
-diesel::allow_tables_to_appear_in_same_query!(builds, sources,);
+diesel::allow_tables_to_appear_in_same_query!(
+    builds,
+    logs,
+    sources,
+);

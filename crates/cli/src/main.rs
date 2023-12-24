@@ -15,7 +15,7 @@ enum Commands {
 
 #[derive(Parser)]
 #[command(author, version)]
-#[command(about = "cli", long_about = "sync ChampR builds")]
+#[command(about = "cli", long_about = "sync builds for ChampR")]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,
@@ -52,6 +52,7 @@ async fn main() -> anyhow::Result<()> {
                 .collect::<Vec<db::models::NewSource>>();
             let total = db::insert_many_sources(&mut pg_conn, new_sources).await?;
             info!("inserted: {total}");
+            db::insert_log(&mut pg_conn, String::from("sync_sources")).await?;
 
             Ok(())
         }
@@ -109,6 +110,8 @@ async fn main() -> anyhow::Result<()> {
                 let ret = db::upsert_many_builds(&mut pg_conn, new_builds).await?;
                 info!("[{}] inserted builds: {ret}", &item.value);
             }
+
+            db::insert_log(&mut pg_conn, String::from("sync_builds")).await?;
 
             Ok(())
         }

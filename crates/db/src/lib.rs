@@ -14,7 +14,7 @@ use diesel_async::{
 };
 use dotenvy::dotenv;
 
-use models::{Build, NewSource, Source};
+use models::{Build, NewSource, Source, Log};
 
 use crate::models::NewBuild;
 
@@ -165,4 +165,14 @@ pub async fn find_builds_by_champion_id_and_source(
         .first::<Build>(&mut conn)
         .await?;
     Ok(result)
+}
+
+pub async fn insert_log(conn: &mut AsyncPgConnection, action: String) -> Result<Log, diesel::result::Error> {
+    use schema::logs::{dsl as logs_dsl, table};
+
+    diesel::insert_into(table)
+        .values(logs_dsl::action.eq(action))
+        .returning(Log::as_returning())
+        .get_result(conn)
+        .await
 }
