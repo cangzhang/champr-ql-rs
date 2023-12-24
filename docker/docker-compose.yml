@@ -1,6 +1,6 @@
 services:
   quicklook-server:
-    image: cangzhang/quicklook-rs:nightly-a9fd140
+    image: cangzhang/quicklook-rs:nightly-5883ab3
     restart: always
     environment:
       DATABASE_URL: postgres://postgres:testpassword@db:5432/quicklook
@@ -33,7 +33,7 @@ services:
   ofelia:
     image: mcuadros/ofelia:latest
     depends_on:
-      - app
+      - quicklook-server
     restart: "always"
     command: daemon --docker
     volumes:
