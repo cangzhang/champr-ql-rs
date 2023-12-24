@@ -9,6 +9,12 @@ services:
       - "3333:3030"
     depends_on:
       - db
+    labels:
+      ofelia.enabled: "true"
+      ofelia.job-exec.sync-build.schedule: "0 0 5 * * *"
+      ofelia.job-exec.sync-build.command: "/usr/local/bin/quicklook-cli sync-build"
+      ofelia.job-exec.sync-source.schedule: "0 0 0,12 * * *"
+      ofelia.job-exec.sync-source.command: "/usr/local/bin/quicklook-cli sync-source"
 
   # Postgres
   db:
@@ -23,6 +29,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    depends_on:
+      - app
+    restart: "always"
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   db:
