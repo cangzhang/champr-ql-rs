@@ -3,7 +3,7 @@ services:
     image: cangzhang/quicklook-rs:nightly-5883ab3
     restart: always
     environment:
-      DATABASE_URL: postgres://postgres:testpassword@db:5432/quicklook
+      DATABASE_URL: postgres://postgres:e4UF57vVWWfnFm@db:5432/quicklook
       PORT: 3030
     ports:
       - "3333:3030"
@@ -11,7 +11,7 @@ services:
       - db
     labels:
       ofelia.enabled: "true"
-      ofelia.job-exec.sync-build.schedule: "0 0 5 * * *"
+      ofelia.job-exec.sync-build.schedule: "0 0 20 * * *"
       ofelia.job-exec.sync-build.command: "/usr/local/bin/quicklook-cli sync-build"
       ofelia.job-exec.sync-source.schedule: "0 0 0,12 * * *"
       ofelia.job-exec.sync-source.command: "/usr/local/bin/quicklook-cli sync-source"
@@ -21,9 +21,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: testpassword
-    ports:
-      - "5243:5432"
+      POSTGRES_PASSWORD: e4UF57vVWWfnFm
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
